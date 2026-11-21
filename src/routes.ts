@@ -631,14 +631,8 @@ async function watchHandler(req: Request, res: Response, directAnikotoId?: strin
     }
 
 
-    return res.json({
-      malId,
-      title: details ? (details.titleEnglish || details.title) : null,
-      count: episodes.length,
-      episodes,
-    });
   } catch (e: any) {
-    return res.status(502).json({ error: 'Combined episode fetch failed', detail: e?.message || String(e) });
+    return res.status(502).json({ error: 'Watch request failed', detail: e?.message || String(e) });
   }
 }
 

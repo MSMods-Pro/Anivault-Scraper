@@ -640,7 +640,7 @@ async function watchHandler(req: Request, res: Response, directAnikotoId?: strin
   } catch (e: any) {
     return res.status(502).json({ error: 'Combined episode fetch failed', detail: e?.message || String(e) });
   }
-});
+}
 
 router.get('/health', (_req, res) => {
   // Unified with anivault.co's /healthz shape ({ status, checks, external })

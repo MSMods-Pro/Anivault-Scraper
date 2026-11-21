@@ -72,7 +72,6 @@ async function enrichDesidub(result: SiteIds, altTitle?: string | null): Promise
   return result;
 }
 
-
 // MAL ID → AniList ID
 // Returns null (never throws) if AniList is down/unreachable -- callers use
 // that as the signal to fall back to the MAL-only path (getSiteIdsByMal).

@@ -27,7 +27,7 @@ flowchart LR
     Client -->|2: episodes| API
     Client -->|3: servers| API
     Client -->|4: watch| API
-    API -->|scrape| Sources{{AnimeHeaven · Anikoto · DesiDub · Re:Anime · MegaPlay}}
+    API -->|scrape| Sources{{AnimeHeaven · Anikoto · DesiDub · MegaPlay}}
     Sources -->|embed / mp4| API
     API -->|proxied stream + subtitles| Client
 
@@ -54,7 +54,6 @@ there's no multi-step resolution required the way playback has.
 | **AnimeHeaven** (animeheaven.me) | ⚠️ Hosting-limited | Does not work on Vercel; deploy on Railway or test locally |
 | **Anikoto** (anikoto.net) | ✅ Verified | Megacloud/Megaplay decryption + a direct-CDN side channel |
 | **DesiDub** (desidubanime.me) | ✅ Integrated | Multi-audio and dubbed episodes; supports episode/server listing and stream resolution |
-| **Re:Anime** (reanime.cz) | ✅ Integrated | AniList/MAL matching; decrypted HLS, subtitles, audio tracks, qualities, and intro/outro metadata |
 | **MegaPlay Direct** (megaplay.buzz) | ✅ Working | Uses MAL/AniList IDs directly and resolves the player page to HLS without Anikoto title search |
 
 ### Metadata & art
@@ -95,7 +94,7 @@ List episodes for a title on a given source.
 | Param | Required | Notes |
 |---|---|---|
 | `anilistId` / `malId` | yes* | *unless `heavenId` is used with `source=animeheaven` |
-| `source` | no | `animeheaven` \| `anikoto` \| `desidub` \| `reanime` \| `megaplay` (default `anikoto`) |
+| `source` | no | `animeheaven` \| `anikoto` \| `desidub` \| `megaplay` (default `anikoto`) |
 | `heavenId` | no | manual AnimeHeaven show id |
 ```
 GET /api/episodes?anilistId=20&source=anikoto
@@ -145,7 +144,7 @@ The response keeps the same `servers[]` fields as v1 (`name`, `sourceId`,
 Resolve a real, playable stream for an episode — the main playback endpoint.
 | Path param | Notes |
 |---|---|
-| `source` | `animeheaven` \| `anikoto` \| `desidub` \| `reanime` \| `megaplay` |
+| `source` | `animeheaven` \| `anikoto` \| `desidub` \| `megaplay` |
 | `id` | AniList id (or `mal-{id}`, or AnimeHeaven id) |
 | `ep` | episode number |
 | `type` | `sub` \| `dub` |
@@ -256,6 +255,6 @@ One call instead of chaining several.
 
 ## Status
 
-AnimeHeaven does not work when this API is deployed on Vercel. Use Railway or a local deployment to run/test AnimeHeaven instead; a failure on Vercel does not necessarily mean the scraper itself is broken. Anikoto, DesiDub, Re:Anime, and direct-ID MegaPlay are also available for streaming. The MAL scraper
+AnimeHeaven does not work when this API is deployed on Vercel. Use Railway or a local deployment to run/test AnimeHeaven instead; a failure on Vercel does not necessarily mean the scraper itself is broken. Anikoto, DesiDub, and direct-ID MegaPlay are also available for streaming. The MAL scraper
 covers anime/character details, episodes, pictures, theme songs, trailers,
 and recommendations, backed by TMDB/Kitsu/AniList for art and thumbnails.

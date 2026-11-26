@@ -24,11 +24,11 @@ export interface ZokoAnimeStream {
 const BASE_URL = 'https://zokoanime.video';
 const OBFUSCATION_KEY = 'otaku-embed-v1';
 
-export function getZokoAnimeServers(malId: string, episode: number): ZokoAnimeServer[] {
-  if (!/^\d+$/.test(malId) || !Number.isSafeInteger(episode) || episode < 1) return [];
+export function getZokoAnimeServers(id: string, episode: number, idType: 'mal' | 'anilist' = 'mal'): ZokoAnimeServer[] {
+  if (!/^\d+$/.test(id) || !Number.isSafeInteger(episode) || episode < 1) return [];
   return (['sub', 'dub'] as const).map(type => ({
     name: 'ZokoAnime',
-    sourceId: [malId, String(episode), type].join('::'),
+    sourceId: [idType, id, String(episode), type].join('::'),
     type,
   }));
 }
@@ -53,12 +53,18 @@ function safeHttpUrl(value: unknown): string | null {
 }
 
 export async function getZokoAnimeStream(sourceId: string): Promise<ZokoAnimeStream | null> {
-  const [malId, episodeText, type, ...extra] = sourceId.split('::');
+  const parts = sourceId.split('::');
+  // Accept the legacy MAL-only ID while supporting explicit MAL/AniList IDs.
+  const hasIdType = parts.length === 4 && (parts[0] === 'mal' || parts[0] === 'anilist');
+  const idType = hasIdType ? parts[0] as 'mal' | 'anilist' : 'mal';
+  const id = hasIdType ? parts[1] : parts[0];
+  const episodeText = hasIdType ? parts[2] : parts[1];
+  const type = hasIdType ? parts[3] : parts[2];
   const episode = Number(episodeText);
-  if (extra.length || !/^\d+$/.test(malId || '') || !Number.isSafeInteger(episode) ||
+  if (parts.length !== (hasIdType ? 4 : 3) || !/^\d+$/.test(id || '') || !Number.isSafeInteger(episode) ||
       episode < 1 || (type !== 'sub' && type !== 'dub')) return null;
 
-  const embedUrl = 'https://zokoanime.video/stream/mal/' + malId + '/' + episode + '/' + type;
+  const embedUrl = 'https://zokoanime.video/stream/' + idType + '/' + id + '/' + episode + '/' + type + '?color=35d5bf';
   const response = await axios.get(embedUrl, {
     timeout: 15000,
     responseType: 'text',

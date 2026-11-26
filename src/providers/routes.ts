@@ -11,24 +11,18 @@ function safeError(error: any) {
     : error?.message || 'Provider request failed';
 }
 
-async function resolveZokoMalId(req: Request): Promise<string | null> {
-  const malId = String(req.query.malId || '');
-  if (/^\d+$/.test(malId)) return malId;
-  const anilistId = Number(req.query.anilistId);
-  if (!Number.isSafeInteger(anilistId) || anilistId < 1) return null;
-  const ids = await getSiteIds(anilistId);
-  return ids?.malId ? String(ids.malId) : null;
-}
-
 router.get('/zokoanime/servers', async (req: Request, res: Response) => {
   try {
-    const malId = await resolveZokoMalId(req);
     const episode = Number(req.query.ep);
-    if (!malId) return res.status(400).json({ error: 'Provide a valid ?malId= or a resolvable ?anilistId=' });
-    if (!Number.isSafeInteger(episode) || episode < 1) {
-      return res.status(400).json({ error: 'Required query param: ?ep={episodeNumber}' });
+    if (!Number.isSafeInteger(episode) || episode < 1) return res.status(400).json({ error: 'Required query param: ?ep={episodeNumber}' });
+    const anilistId = Number(req.query.anilistId);
+    if (Number.isSafeInteger(anilistId) && anilistId > 0) {
+      const servers = getZokoAnimeServers(String(anilistId), episode, 'anilist');
+      return res.json({ source: 'zokoanime', anilistId, episode, count: servers.length, servers });
     }
-    const servers = getZokoAnimeServers(malId, episode);
+    const malId = String(req.query.malId || '');
+    if (!/^\\d+$/.test(malId)) return res.status(400).json({ error: 'Provide a valid ?anilistId= or ?malId=' });
+    const servers = getZokoAnimeServers(malId, episode, 'mal');
     return res.json({ source: 'zokoanime', malId: Number(malId), episode, count: servers.length, servers });
   } catch (error) {
     return res.status(502).json({ error: safeError(error) });
@@ -41,10 +35,15 @@ router.get('/zokoanime/watch', async (req: Request, res: Response) => {
   try {
     const stream = await getZokoAnimeStream(sourceId);
     if (!stream) return res.status(400).json({ error: 'Invalid ZokoAnime server ID' });
-    const [malId, episode, type] = sourceId.split('::');
+    const parts = sourceId.split('::');
+    const hasIdType = parts.length === 4 && (parts[0] === 'mal' || parts[0] === 'anilist');
+    const idType = hasIdType ? parts[0] : 'mal';
+    const id = hasIdType ? parts[1] : parts[0];
+    const episode = hasIdType ? parts[2] : parts[1];
+    const type = hasIdType ? parts[3] : parts[2];
     return res.json({
       source: 'zokoanime',
-      malId: Number(malId),
+      ...(idType === 'anilist' ? { anilistId: Number(id) } : { malId: Number(id) }),
       episode: Number(episode),
       type,
       ...stream,

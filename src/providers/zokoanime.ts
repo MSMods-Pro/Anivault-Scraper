@@ -64,7 +64,7 @@ export async function getZokoAnimeStream(sourceId: string): Promise<ZokoAnimeStr
   if (parts.length !== (hasIdType ? 4 : 3) || !/^\d+$/.test(id || '') || !Number.isSafeInteger(episode) ||
       episode < 1 || (type !== 'sub' && type !== 'dub')) return null;
 
-  const embedUrl = 'https://zokoanime.video/stream/' + idType + '/' + id + '/' + episode + '/' + type + '?color=35d5bf';
+  const embedUrl = 'https://zokoanime.video/stream/' + idType + '/' + id + '/' + episode + '/' + type;
   const response = await axios.get(embedUrl, {
     timeout: 15000,
     responseType: 'text',

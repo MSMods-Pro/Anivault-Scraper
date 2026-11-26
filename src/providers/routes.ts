@@ -1,6 +1,5 @@
 import { Router, Request, Response } from 'express';
 import { getZokoAnimeServers, getZokoAnimeStream } from './zokoanime';
-import { getSiteIds } from '../utils/mapper';
 import { proxiedHlsUrl, proxiedSubtitleUrl } from '../routes';
 
 const router = Router();

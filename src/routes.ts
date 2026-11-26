@@ -8,6 +8,7 @@ import { resolveEmbed } from './resolvers/megacloud';
 import { getHeavenEpisodes, getHeavenServers, getHeavenStream } from './scrapers/animeheaven';
 import { getAnikotoEpisodes, getAnikotoEpisodesById, getAnikotoServers, getAnikotoEmbedUrl, searchAnikoto } from './scrapers/anikoto';
 import { getMegaPlayStream } from './scrapers/megaplay';
+import { getZokoAnimeStream } from './providers/zokoanime';
 import { getDesidubEpisodes, getDesidubServers, getDesidubStream } from './scrapers/desidub';
 import { getAnimeDetails, getEpisodes as getMalEpisodes, getEpisode as getMalEpisode, getAllEpisodes as getAllMalEpisodes, getCharacters, getCharacterDetails, getAnimePictures, getCharacterPictures, getAnimeThemes, getAnimeVideos, getRecommendations, searchAnime, getExternalLinks, getStreamingPlatforms, debugSearchHtml, MalEpisode } from './scrapers/mal';
 import { getSeasonNow, getTopBanners, getStreamingEpisodes, AniListStreamingEpisode, getAnimeImages as getAnilistAnimeImages } from './scrapers/anilist';
@@ -357,7 +358,7 @@ async function watchHandler(req: Request, res: Response, directAnikotoId?: strin
   const preferredServer = req.query.server as string | undefined;
   const heavenOverride = req.query.heavenId as string | undefined;
 
-  if (!SOURCES.includes(source as Source)) return res.status(400).json({ error: `source must be: ${SOURCES.join(', ')}` });
+  if (source !== 'zokoanime' && !SOURCES.includes(source as Source)) return res.status(400).json({ error: `source must be: ${SOURCES.join(', ')}, zokoanime` });
   const epNum = parseInt(ep);
   if (isNaN(epNum)) return res.status(400).json({ error: 'ep must be a number' });
   if (!['sub', 'dub', 'raw'].includes(type)) return res.status(400).json({ error: 'type must be: sub, dub, raw' });
@@ -368,6 +369,39 @@ async function watchHandler(req: Request, res: Response, directAnikotoId?: strin
   const malId = id.startsWith('mal-') ? id.replace('mal-', '') : undefined;
 
   try {
+    if (source === 'zokoanime') {
+      const idType = malId ? 'mal' : 'anilist';
+      const providerId = malId || id;
+      if (!/^\\d+$/.test(providerId)) return res.status(400).json({ error: 'ID must be a numeric AniList ID or mal-{id}' });
+      const stream = await getZokoAnimeStream([idType, providerId, String(epNum), type].join('::'));
+      if (!stream) return res.status(502).json({ error: 'ZokoAnime did not resolve a stream', source });
+      return res.json({
+        ...(idType === 'anilist' ? { anilistId: Number(providerId) } : { malId: Number(providerId) }),
+        episode: epNum,
+        type,
+        source,
+        server: 'ZokoAnime',
+        availableServers: ['ZokoAnime'],
+        embedUrl: stream.embedUrl,
+        m3u8: stream.m3u8,
+        hlsProxyUrl: proxiedHlsUrl(req, stream.m3u8, stream.embedUrl),
+        playbackMode: 'hls',
+        iframeOnly: false,
+        subtitles: stream.subtitles.map((track) => ({
+          lang: track.lang,
+          label: track.label,
+          default: track.default,
+          src: track.src,
+          url: proxiedSubtitleUrl(req, track.src, stream.embedUrl),
+        })),
+        downloadUrl: stream.downloadUrl,
+        videoId: stream.videoId,
+        skip: stream.skip,
+        intro: null,
+        outro: null,
+        note: null,
+      });
+    }
     const siteIds = directAnikoto
       ? { anilistId: null, malId: null, title: null, siteIds: { anikoto: directAnikotoId } }
       : directHeavenId

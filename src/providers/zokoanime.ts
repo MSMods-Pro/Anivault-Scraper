@@ -64,7 +64,9 @@ export async function getZokoAnimeStream(sourceId: string): Promise<ZokoAnimeStr
   if (parts.length !== (hasIdType ? 4 : 3) || !/^\d+$/.test(id || '') || !Number.isSafeInteger(episode) ||
       episode < 1 || (type !== 'sub' && type !== 'dub')) return null;
 
-  const embedUrl = 'https://zokoanime.video/stream/' + idType + '/' + id + '/' + episode + '/' + type;
+  // ZokoAnime's public route uses `ani` for AniList IDs (not `anilist`).
+  const routeType = idType === 'anilist' ? 'ani' : 'mal';
+  const embedUrl = 'https://zokoanime.video/stream/' + routeType + '/' + id + '/' + episode + '/' + type;
   const response = await axios.get(embedUrl, {
     timeout: 15000,
     responseType: 'text',

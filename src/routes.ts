@@ -372,7 +372,7 @@ async function watchHandler(req: Request, res: Response, directAnikotoId?: strin
     if (source === 'zokoanime') {
       const idType = malId ? 'mal' : 'anilist';
       const providerId = malId || id;
-      if (!/^\\d+$/.test(providerId)) return res.status(400).json({ error: 'ID must be a numeric AniList ID or mal-{id}' });
+      if (!/^\d+$/.test(providerId)) return res.status(400).json({ error: 'ID must be a numeric AniList ID or mal-{id}' });
       const stream = await getZokoAnimeStream([idType, providerId, String(epNum), type].join('::'));
       if (!stream) return res.status(502).json({ error: 'ZokoAnime did not resolve a stream', source });
       return res.json({

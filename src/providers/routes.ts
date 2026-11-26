@@ -20,7 +20,7 @@ router.get('/zokoanime/servers', async (req: Request, res: Response) => {
       return res.json({ source: 'zokoanime', anilistId, episode, count: servers.length, servers });
     }
     const malId = String(req.query.malId || '');
-    if (!/^\\d+$/.test(malId)) return res.status(400).json({ error: 'Provide a valid ?anilistId= or ?malId=' });
+    if (!/^\d+$/.test(malId)) return res.status(400).json({ error: 'Provide a valid ?anilistId= or ?malId=' });
     const servers = getZokoAnimeServers(malId, episode, 'mal');
     return res.json({ source: 'zokoanime', malId: Number(malId), episode, count: servers.length, servers });
   } catch (error) {
